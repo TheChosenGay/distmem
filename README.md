@@ -9,7 +9,7 @@ Distributed memory cache system supported for http transport.
 
 ## TODO
 
-+ dynamicly add peer and handshake protocol for discovery between peers.
++ dynamicly  and handshake protocol for discovery between peers.
 + deamon manage and cli.
 + support for websocket transport.
 

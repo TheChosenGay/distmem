@@ -8,4 +8,5 @@ type CacheOpt interface {
 type Peer interface {
 	CacheOpt
 	Addr() string
+	Connect(addr string) error
 }

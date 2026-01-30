@@ -6,7 +6,7 @@ import (
 
 func NewHashCirclePrepare(replicas int) *HashCircle {
 	hashCircle := NewHashCircle(HashCircleOpts{
-		replicas: replicas,
+		Replicas: replicas,
 	})
 	return hashCircle
 }

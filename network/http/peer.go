@@ -63,6 +63,15 @@ func (p *HttpPeer) Close() error {
 	return nil
 }
 
+func (p *HttpPeer) Connect(addr string) error {
+	url := "http://" + addr + "/cache/connect/" + p.url
+	_, err := http.Post(url, "application/json", nil)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // 约定http请求路由为: http://<peer_url>/cache/get/<key>
 func (p *HttpPeer) GetUrl(key string) string {
 	return "http://" + p.url + "/cache/get/" + key

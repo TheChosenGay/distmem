@@ -9,8 +9,8 @@ import (
 type HashFunc func(string) uint32
 
 type HashCircleOpts struct {
-	hashFunc HashFunc
-	replicas int
+	HashFunc HashFunc
+	Replicas int
 }
 
 type HashCircle struct {
@@ -20,8 +20,8 @@ type HashCircle struct {
 }
 
 func NewHashCircle(opts HashCircleOpts) *HashCircle {
-	if opts.hashFunc == nil {
-		opts.hashFunc = func(key string) uint32 {
+	if opts.HashFunc == nil {
+		opts.HashFunc = func(key string) uint32 {
 			return crc32.ChecksumIEEE([]byte(key))
 		}
 	}
@@ -33,10 +33,10 @@ func NewHashCircle(opts HashCircleOpts) *HashCircle {
 }
 
 func (h *HashCircle) Add(keys ...string) {
-	hashKeys := make([]uint32, len(keys)*h.opts.replicas)
+	hashKeys := make([]uint32, len(keys)*h.opts.Replicas)
 	for i, k := range keys {
 		for j, hk := range h.calculateKey(k) {
-			hashKeys[i*h.opts.replicas+j] = hk
+			hashKeys[i*h.opts.Replicas+j] = hk
 		}
 	}
 
@@ -46,8 +46,23 @@ func (h *HashCircle) Add(keys ...string) {
 	})
 }
 
+func (h *HashCircle) Delete(keys ...string) {
+	for _, k := range keys {
+		for _, hk := range h.calculateKey(k) {
+			idx := sort.Search(len(h.keys), func(i int) bool {
+				return h.keys[i] == hk
+			})
+			if idx < len(h.keys) {
+				h.keys = append(h.keys[:idx], h.keys[idx+1:]...)
+				delete(h.keyMap, hk)
+			}
+		}
+	}
+}
+
+// Get the peer address for the given key
 func (h *HashCircle) Get(key string) string {
-	hKey := h.opts.hashFunc(key)
+	hKey := h.opts.HashFunc(key)
 	idx := sort.Search(len(h.keys), func(i int) bool {
 		return h.keys[i] >= hKey
 	})
@@ -58,9 +73,9 @@ func (h *HashCircle) Get(key string) string {
 }
 
 func (h *HashCircle) calculateKey(key string) []uint32 {
-	hashKeys := make([]uint32, h.opts.replicas)
-	for i := range h.opts.replicas {
-		hashKeys[i] = h.opts.hashFunc(key + strconv.Itoa(i))
+	hashKeys := make([]uint32, h.opts.Replicas)
+	for i := range h.opts.Replicas {
+		hashKeys[i] = h.opts.HashFunc(key + strconv.Itoa(i))
 		h.keyMap[hashKeys[i]] = key
 	}
 	return hashKeys

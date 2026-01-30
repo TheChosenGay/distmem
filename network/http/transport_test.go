@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestHttpTransport(t *testing.T) {
@@ -53,5 +55,33 @@ func TestHttpTransport(t *testing.T) {
 
 	fmt.Printf("key: %s, value: %v\n", "key", value)
 	fmt.Printf("key: %s, value: %v\n", "key2", value2)
+
+}
+
+func TestHttpTransportConnect(t *testing.T) {
+	tr := NewHttpTransport()
+	go tr.Listen("127.0.0.1:8089")
+
+	tr1 := NewHttpTransport()
+	go tr1.Listen("127.0.0.1:8090")
+
+	tr2 := NewHttpTransport()
+	go tr2.Listen("127.0.0.1:8091")
+
+	time.Sleep(100 * time.Millisecond)
+
+	tr.Connect("127.0.0.1:8090")
+	tr.Connect("127.0.0.1:8091")
+	time.Sleep(100 * time.Millisecond)
+	peer, err := tr.GetPeer("127.0.0.1:8090")
+	assert.NotNil(t, peer)
+	assert.Nil(t, err)
+	peer, err = tr.GetPeer("127.0.0.1:8089")
+	assert.NotNil(t, peer)
+	assert.Nil(t, err)
+
+	peer, err = tr1.GetPeer("127.0.0.1:8091")
+	assert.NotNil(t, peer)
+	assert.Nil(t, err)
 
 }
